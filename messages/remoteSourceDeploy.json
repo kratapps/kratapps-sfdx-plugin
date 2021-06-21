@@ -1,0 +1,7 @@
+{
+  "commandDescription": "like force:source:deploy, but from GitHub",
+  "checkonlyFlagDescription": "validate deploy but don’t save to the org",
+  "serviceFlagDescription": "external service",
+  "sourcepathFlagDescription": "comma-separated list of paths to the remote source files to deploy",
+  "tokenFlagDescription": "external service access token"
+}
