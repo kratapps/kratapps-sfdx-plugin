@@ -1,13 +1,13 @@
 import { flags, SfdxCommand } from '@salesforce/command';
 import { Messages, SfdxError } from '@salesforce/core';
-import { AnyJson } from '@salesforce/ts-types';
-import fetch from 'node-fetch';
+import { AnyJson, isArray } from '@salesforce/ts-types';
 import { dirSync } from 'tmp';
-import { Many } from "@salesforce/ts-types/lib/types/union";
 import { outputFileSync } from 'fs-extra';
 import { join } from "path";
 import { UX } from "@salesforce/command/lib/ux";
 import { cmd } from '../../../../lib/command';
+import { acceptJson, acceptRaw, getRepositoryContent, isGithubContent } from "../../../../lib/github";
+import rimraf = require('rimraf');
 
 Messages.importMessagesDirectory(__dirname);
 
@@ -34,10 +34,6 @@ export default class Org extends SfdxCommand {
   public static args = [{ name: 'file' }];
 
   protected static flagsConfig = {
-    // checkonly: flags.boolean({
-    //   char: 'c',
-    //   description: messages.getMessage('checkonlyFlagDescription'),
-    // }),
     service: flags.enum<Service>({
       char: 's',
       description: messages.getMessage('serviceFlagDescription'),
@@ -63,7 +59,7 @@ export default class Org extends SfdxCommand {
     const [owner, repo] = sourcePathParts;
     const path = sourcePathParts.slice(2).join('/');
     this.ux.startSpinner(`loading source from ${service}`);
-    const { name: tmpDir, removeCallback } = dirSync();
+    const { name: tmpDir } = dirSync();
     this.ux.startSpinner(`loading source from ${service}`);
     await retrieveSource(this.ux, tmpDir, owner, repo, path);
     this.ux.stopSpinner();
@@ -75,7 +71,7 @@ export default class Org extends SfdxCommand {
       sourcepath: path,
       targetusername
     }]);
-    removeCallback();
+    rimraf.sync(tmpDir);
     return {};
   }
 }
@@ -105,46 +101,26 @@ async function processItem(baseDir: string, content: GithubContent, baseUrl: str
 }
 
 async function saveFileFromGithub(path: string, url: string) {
-  const data = await retrieveFromGithubRaw(url);
+  const data = await getRepositoryContent({
+    target: url,
+    accept: acceptRaw,
+    token: KRATAPPS_GH_ACCESS_TOKEN
+  });
   return outputFileSync(path, data);
 }
 
 async function retrieveFromGithubRecursive(baseDir: string, baseUrl: string, path: string) {
   const url = `${baseUrl}/${path}`;
-  const resp = await fetch(url, {
-      headers: {
-        accept: "application/vnd.github.v3.json",
-        Authorization: KRATAPPS_GH_ACCESS_TOKEN ? `token ${KRATAPPS_GH_ACCESS_TOKEN}` : undefined,
-      },
-    },
-  );
-  if (resp.status === 404) {
-    throw new SfdxError(`resource not found at: ${url}`);
-  } else if (resp.status !== 200) {
-    throw new SfdxError(await resp.text());
-  }
-  const content: Many<GithubContent> = await resp.json();
-  if (content instanceof Array) {
+  const content = await getRepositoryContent({
+    target: url,
+    accept: acceptJson,
+    token: KRATAPPS_GH_ACCESS_TOKEN
+  });
+  if (isGithubContent(content)) {
+    processItem(baseDir, content, baseUrl);
+  } else if (isArray<GithubContent>(content)) {
     for (const item of content) {
       processItem(baseDir, item, baseUrl);
     }
-  } else {
-    processItem(baseDir, content, baseUrl);
   }
-}
-
-async function retrieveFromGithubRaw(url: string) {
-  const resp = await fetch(url, {
-      headers: {
-        accept: "application/vnd.github.v3.raw+json",
-        Authorization: KRATAPPS_GH_ACCESS_TOKEN ? `token ${KRATAPPS_GH_ACCESS_TOKEN}` : undefined,
-      },
-    },
-  );
-  if (resp.status === 404) {
-    throw new SfdxError(`resource not found at: ${url}`);
-  } else if (resp.status !== 200) {
-    throw new SfdxError(await resp.text());
-  }
-  return await resp.text();
 }
