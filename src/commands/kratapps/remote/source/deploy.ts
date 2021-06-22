@@ -1,12 +1,18 @@
 import { flags, SfdxCommand } from '@salesforce/command';
 import { Messages, SfdxError } from '@salesforce/core';
-import { AnyJson, isArray } from '@salesforce/ts-types';
+import { AnyJson, isArray, Optional } from '@salesforce/ts-types';
 import { dirSync } from 'tmp';
 import { outputFileSync } from 'fs-extra';
 import { join } from "path";
 import { UX } from "@salesforce/command/lib/ux";
 import { cmd } from '../../../../lib/command';
-import { acceptJson, acceptRaw, getRepositoryContent, isGithubContent } from "../../../../lib/github";
+import {
+  acceptJson,
+  acceptRaw,
+  getRepositoryContent, GithubContent,
+  isGithubContent,
+  StructuredFileLocation
+} from "../../../../lib/github";
 import rimraf = require('rimraf');
 
 Messages.importMessagesDirectory(__dirname);
@@ -15,13 +21,6 @@ const messages = Messages.loadMessages('kratapps-sfdx-plugin', 'remoteSourceDepl
 const KRATAPPS_GH_ACCESS_TOKEN = process.env.KRATAPPS_GH_ACCESS_TOKEN;
 
 type Service = "github";
-
-type GithubContent = {
-  name: string;
-  path: string;
-  download_url: string | null;
-  type: 'file' | 'dir';
-}
 
 export default class Org extends SfdxCommand {
   public static description = messages.getMessage('commandDescription');
@@ -45,13 +44,17 @@ export default class Org extends SfdxCommand {
       char: 'p',
       description: messages.getMessage('sourcepathFlagDescription'),
       required: true
+    }),
+    token: flags.string({
+      char: 't',
+      description: messages.getMessage('tokenFlagDescription'),
     })
   };
 
   protected static requiresUsername = true;
 
   public async run(): Promise<AnyJson> {
-    const { sourcepath, service, targetusername } = this.flags;
+    const { sourcepath, service, targetusername, token = KRATAPPS_GH_ACCESS_TOKEN } = this.flags;
     const sourcePathParts: string[] = sourcepath.replace(/^(\/)/, "").split('/');
     if (sourcePathParts.length < 3) {
       throw new SfdxError(`Invalid source path: ${sourcepath}`);
@@ -61,7 +64,7 @@ export default class Org extends SfdxCommand {
     this.ux.startSpinner(`loading source from ${service}`);
     const { name: tmpDir } = dirSync();
     this.ux.startSpinner(`loading source from ${service}`);
-    await retrieveSource(this.ux, tmpDir, owner, repo, path);
+    await retrieveSource(this.ux, tmpDir, owner, repo, path, token);
     this.ux.stopSpinner();
     const sfdx = await cmd('sfdx', {
       cwd: tmpDir,
@@ -76,51 +79,52 @@ export default class Org extends SfdxCommand {
   }
 }
 
-async function retrieveSource(ux: UX, dir: string, owner: string, repo: string, path: string) {
+async function retrieveSource(ux: UX, dir: string, owner: string, repo: string, path: string, token: Optional<string>) {
   ux.log(`loading source: sfdx-project.json`);
-  await retrieveFromGithubRecursive(dir, `https://api.github.com/repos/${owner}/${repo}/contents`, 'sfdx-project.json');
+  await retrieveFromGithubRecursive(dir, { owner, repo, path: 'sfdx-project.json' }, token);
   try {
     ux.log(`loading source: .forceignore`);
-    await retrieveFromGithubRecursive(dir, `https://api.github.com/repos/${owner}/${repo}/contents`, '.forceignore');
+    await retrieveFromGithubRecursive(dir, { owner, repo, path: '.forceignore' }, token);
   } catch (ignored) {
     ux.log('.forceignore not found');
   }
   ux.log(`loading source: ${path}`);
-  await retrieveFromGithubRecursive(dir, `https://api.github.com/repos/${owner}/${repo}/contents`, path);
+  await retrieveFromGithubRecursive(dir, { owner, repo, path }, token);
 }
 
-async function processItem(baseDir: string, content: GithubContent, baseUrl: string) {
-  const { type, path, download_url: downloadUrl } = content;
+async function processItem(baseDir: string, content: GithubContent, target: StructuredFileLocation | string, token: Optional<string>) {
+  const promises = [];
+  const { type, path, url, download_url: downloadUrl } = content;
   if (type === 'file' && downloadUrl) {
-    // file
-    await saveFileFromGithub(join(baseDir, path), downloadUrl);
+    promises.push(saveFileFromGithub(join(baseDir, path), downloadUrl, token));
   } else if (type === 'dir') {
-    // dir
-    retrieveFromGithubRecursive(baseDir, baseUrl, path);
+    promises.push(retrieveFromGithubRecursive(baseDir, url, token));
   }
+  return Promise.all(promises);
 }
 
-async function saveFileFromGithub(path: string, url: string) {
+async function saveFileFromGithub(path: string, target: StructuredFileLocation | string, token: Optional<string>) {
   const data = await getRepositoryContent({
-    target: url,
+    target,
     accept: acceptRaw,
-    token: KRATAPPS_GH_ACCESS_TOKEN
+    token
   });
   return outputFileSync(path, data);
 }
 
-async function retrieveFromGithubRecursive(baseDir: string, baseUrl: string, path: string) {
-  const url = `${baseUrl}/${path}`;
+async function retrieveFromGithubRecursive(baseDir: string, target: StructuredFileLocation | string, token: Optional<string>) {
+  const promises = [];
   const content = await getRepositoryContent({
-    target: url,
+    target,
     accept: acceptJson,
-    token: KRATAPPS_GH_ACCESS_TOKEN
+    token
   });
   if (isGithubContent(content)) {
-    processItem(baseDir, content, baseUrl);
+    promises.push(processItem(baseDir, content, target, token));
   } else if (isArray<GithubContent>(content)) {
     for (const item of content) {
-      processItem(baseDir, item, baseUrl);
+      promises.push(processItem(baseDir, item, target, token));
     }
   }
+  return Promise.all(promises);
 }

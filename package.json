@@ -14,7 +14,7 @@
     "node-fetch": "2.6.1",
     "rimraf": "3.0.2",
     "tmp": "0.2.1",
-    "tslib": "^1"
+    "tslib": "^2"
   },
   "devDependencies": {
     "@oclif/dev-cli": "^1",
@@ -56,8 +56,11 @@
     "commands": "./lib/commands",
     "bin": "sfdx",
     "topics": {
-      "hello": {
-        "description": "Commands to say hello."
+      "kratapps:remote": {
+        "description": "Commands related to remote services"
+      },
+      "kratapps:remote:source": {
+        "description": "Commands related to remote source"
       }
     },
     "devPlugins": [
