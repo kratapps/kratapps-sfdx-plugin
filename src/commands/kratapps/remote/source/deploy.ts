@@ -18,11 +18,8 @@ import rimraf = require('rimraf');
 Messages.importMessagesDirectory(__dirname);
 
 const messages = Messages.loadMessages('kratapps-sfdx-plugin', 'remoteSourceDeploy');
-const KRATAPPS_GH_ACCESS_TOKEN = process.env.KRATAPPS_GH_ACCESS_TOKEN;
 
-type Service = "github";
-
-export default class Org extends SfdxCommand {
+export default class RemoteSourceDeploy extends SfdxCommand {
   public static description = messages.getMessage('commandDescription');
 
   public static examples = [
@@ -33,13 +30,6 @@ export default class Org extends SfdxCommand {
   public static args = [{ name: 'file' }];
 
   protected static flagsConfig = {
-    service: flags.enum<Service>({
-      char: 's',
-      description: messages.getMessage('serviceFlagDescription'),
-      options: ['github'],
-      default: 'github',
-      required: true
-    }),
     sourcepath: flags.string({
       char: 'p',
       description: messages.getMessage('sourcepathFlagDescription'),
@@ -54,7 +44,8 @@ export default class Org extends SfdxCommand {
   protected static requiresUsername = true;
 
   public async run(): Promise<AnyJson> {
-    const { sourcepath, service, targetusername, token = KRATAPPS_GH_ACCESS_TOKEN } = this.flags;
+    const { sourcepath, service, targetusername } = this.flags;
+    const token = this.flags.token || process.env.KRATAPPS_GH_ACCESS_TOKEN || undefined;
     const sourcePathParts: string[] = sourcepath.replace(/^(\/)/, "").split('/');
     if (sourcePathParts.length < 3) {
       throw new SfdxError(`Invalid source path: ${sourcepath}`);

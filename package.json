@@ -57,10 +57,10 @@
     "bin": "sfdx",
     "topics": {
       "kratapps:remote": {
-        "description": "Commands related to remote services"
+        "description": "Commands related to remote services, e.g. github"
       },
       "kratapps:remote:source": {
-        "description": "Commands related to remote source"
+        "description": "Commands related to remote source, e.g. github"
       }
     },
     "devPlugins": [
