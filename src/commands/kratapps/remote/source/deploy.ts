@@ -7,9 +7,9 @@ import { join } from "path";
 import { UX } from "@salesforce/command/lib/ux";
 import { cmd } from '../../../../lib/command';
 import {
-  acceptJson,
-  acceptRaw,
-  getRepositoryContent, GithubContent,
+  acceptHeader,
+  getRepositoryContent,
+  GithubContent,
   isGithubContent,
   StructuredFileLocation
 } from "../../../../lib/github";
@@ -106,7 +106,7 @@ async function processItem(baseDir: string, content: GithubContent, target: Stru
 async function saveFileFromGithub(path: string, target: StructuredFileLocation | string, token: Optional<string>) {
   const data = await getRepositoryContent({
     target,
-    accept: acceptRaw,
+    accept: acceptHeader.raw,
     token
   });
   return outputFileSync(path, data);
@@ -116,7 +116,7 @@ async function retrieveFromGithubRecursive(baseDir: string, target: StructuredFi
   const promises = [];
   const content = await getRepositoryContent({
     target,
-    accept: acceptJson,
+    accept: acceptHeader.json,
     token
   });
   if (isGithubContent(content)) {

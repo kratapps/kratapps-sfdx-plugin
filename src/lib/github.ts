@@ -2,8 +2,10 @@ import fetch from "node-fetch";
 import { Many } from "@salesforce/ts-types/lib/types/union";
 import { isString } from "@salesforce/ts-types";
 
-export const acceptRaw: Accept = 'application/vnd.github.v3.raw+json';
-export const acceptJson: Accept = 'application/vnd.github.v3.json';
+export const acceptHeader: { [key: string]: Accept } = {
+  raw: 'application/vnd.github.v3.raw+json',
+  json: 'application/vnd.github.v3.json'
+};
 
 export type Accept =
   'application/vnd.github.v3.raw+json' |
@@ -51,5 +53,5 @@ export async function getRepositoryContent(opts: GetRepositoryContentOptions)
   } else if (resp.status !== 200) {
     throw new Error(await resp.text());
   }
-  return accept === acceptRaw ? resp.text() : resp.json();
+  return accept === acceptHeader.raw ? resp.text() : resp.json();
 }
