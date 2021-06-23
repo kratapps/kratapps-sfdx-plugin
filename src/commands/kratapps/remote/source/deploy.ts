@@ -26,7 +26,7 @@ export default class RemoteSourceDeploy extends SfdxCommand {
   `
   ];
 
-  public static args = [{ name: 'file' }];
+  public static args = [];
 
   protected static flagsConfig = {
     sourcepath: flags.string({
