@@ -6,19 +6,9 @@
 
 <!-- install -->
 
-<!-- usage -->
-```sh-session
-$ npm install -g @kratapps/sfdx-plugin
-$ sfdx COMMAND
-running command...
-$ sfdx (-v|--version|version)
-@kratapps/sfdx-plugin/0.0.0 darwin-x64 node-v14.15.0
-$ sfdx --help [COMMAND]
-USAGE
-  $ sfdx COMMAND
-...
+```shell
+sfdx plugins:install @kratapps/sfdx-plugin
 ```
-<!-- usagestop -->
 
 <!-- commands -->
 * [`sfdx kratapps:remote:source:deploy -p <string> -s <string> [-t <string>] [-u <string>] [--apiversion <string>] [--json] [--loglevel trace|debug|info|warn|error|fatal|TRACE|DEBUG|INFO|WARN|ERROR|FATAL]`](#sfdx-kratappsremotesourcedeploy--p-string--s-string--t-string--u-string---apiversion-string---json---loglevel-tracedebuginfowarnerrorfataltracedebuginfowarnerrorfatal)
