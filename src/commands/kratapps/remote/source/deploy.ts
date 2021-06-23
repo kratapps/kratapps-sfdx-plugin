@@ -4,14 +4,14 @@ import { AnyJson, isArray, Optional } from '@salesforce/ts-types';
 import { dirSync } from 'tmp';
 import { outputFileSync } from 'fs-extra';
 import { join } from "path";
-import { cmd } from '../../../../lib/command';
+import { cmd } from 'lib/command';
 import {
   acceptHeader,
   getRepositoryContent,
   GithubContent,
   isGithubContent,
   StructuredFileLocation
-} from "../../../../lib/github";
+} from "lib/github";
 import rimraf = require('rimraf');
 
 Messages.importMessagesDirectory(__dirname);
