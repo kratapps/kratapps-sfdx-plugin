@@ -60,13 +60,19 @@ export default class RemoteSourceDeploy extends SfdxCommand {
     await this.retrieveSource(srcDir, owner, repo, sourcepath.split(','), token);
     this.ux.stopSpinner();
     const sfdx = cmd('sfdx', {
-      cwd: srcDir
+      cwd: srcDir,
+      printCommand: true
     });
-    await sfdx.exec(['force:source:deploy', {
-      sourcepath,
-      targetusername
-    }]);
-    rimraf.sync(srcDir);
+    try {
+      await sfdx.exec(['force:source:deploy', {
+        sourcepath,
+        targetusername
+      }]);
+    } catch (e) {
+      throw new SfdxError('SourceDeployCommand failed');
+    } finally {
+      rimraf.sync(srcDir);
+    }
     return {};
   }
 
