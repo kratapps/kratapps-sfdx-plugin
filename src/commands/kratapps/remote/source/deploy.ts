@@ -12,14 +12,14 @@ import {
   isGithubContent,
   StructuredFileLocation
 } from "../../../../lib/github";
-import rimraf = require('rimraf');
+import rimraf = require("rimraf");
 
 Messages.importMessagesDirectory(__dirname);
 
 const messages = Messages.loadMessages('@kratapps/sfdx-plugin', 'remoteSourceDeploy');
 
 export default class RemoteSourceDeploy extends SfdxCommand {
-  public static description = messages.getMessage('commandDescription');
+  public static description = `deploy source to an org from GitHub`;
 
   public static examples = [
     `$ sfdx kratapps:remote:source:deploy --targetusername myOrg@example.com --sourcepath /kratapps/lwc-library/src/main/default/lwc
@@ -34,6 +34,11 @@ export default class RemoteSourceDeploy extends SfdxCommand {
       description: messages.getMessage('sourcepathFlagDescription'),
       required: true
     }),
+    source: flags.string({
+      char: 's',
+      description: messages.getMessage('sourceFlagDescription'),
+      required: true
+    }),
     token: flags.string({
       char: 't',
       description: messages.getMessage('tokenFlagDescription'),
@@ -43,31 +48,29 @@ export default class RemoteSourceDeploy extends SfdxCommand {
   protected static requiresUsername = true;
 
   public async run(): Promise<AnyJson> {
-    const { sourcepath, targetusername } = this.flags;
+    const { sourcepath, source, targetusername } = this.flags;
     const token = this.flags.token || process.env.KRATAPPS_GH_ACCESS_TOKEN || undefined;
-    const sourcePathParts: string[] = sourcepath.replace(/^(\/)/, "").split('/');
-    if (sourcePathParts.length < 3) {
-      throw new SfdxError(`Invalid source path: ${sourcepath}`);
+    const sourceMatch = source.replace(/(\/)$/, "").match(new RegExp('https://(.*?)/(.*?)/(.*)'));
+    if (!sourceMatch) {
+      throw new SfdxError(`Invalid source: ${source}`);
     }
-    const [owner, repo] = sourcePathParts;
-    const path = sourcePathParts.slice(2).join('/');
+    const [, service, owner, repo] = sourceMatch;
     const { name: srcDir } = dirSync();
-    this.ux.startSpinner(`loading source from github`);
-    await this.retrieveSource(srcDir, owner, repo, path, token);
+    this.ux.startSpinner(`loading source from ${service}`);
+    await this.retrieveSource(srcDir, owner, repo, sourcepath.split(','), token);
     this.ux.stopSpinner();
     const sfdx = cmd('sfdx', {
-      cwd: srcDir,
-      printCommand: false
+      cwd: srcDir
     });
     await sfdx.exec(['force:source:deploy', {
-      sourcepath: path,
+      sourcepath,
       targetusername
     }]);
     rimraf.sync(srcDir);
     return {};
   }
 
-  private async retrieveSource(srcDir: string, owner: string, repo: string, path: string, token: Optional<string>) {
+  private async retrieveSource(srcDir: string, owner: string, repo: string, paths: string[], token: Optional<string>) {
     this.ux.log(`loading source: sfdx-project.json`);
     await this.retrieveFromGithubRecursive(srcDir, { owner, repo, path: 'sfdx-project.json' }, token);
     try {
@@ -76,8 +79,10 @@ export default class RemoteSourceDeploy extends SfdxCommand {
     } catch (ignored) {
       this.ux.log('.forceignore not found');
     }
-    this.ux.log(`loading source: ${path}`);
-    await this.retrieveFromGithubRecursive(srcDir, { owner, repo, path }, token);
+    for (const path of paths) {
+      this.ux.log(`loading source: ${path}`);
+      await this.retrieveFromGithubRecursive(srcDir, { owner, repo, path }, token);
+    }
   }
 
   private async retrieveFromGithubRecursive(srcDir: string, target: StructuredFileLocation | string, token: Optional<string>) {
