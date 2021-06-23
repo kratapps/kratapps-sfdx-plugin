@@ -1,0 +1,6 @@
+{
+  "checkonlyFlagDescription": "validate deploy but don’t save to the org",
+  "sourceFlagDescription": "remote source, e.g. https://github.com/kratapps/lwc-library",
+  "sourcepathFlagDescription": "comma-separated list of paths to the github source files to deploy",
+  "tokenFlagDescription": "external service access token"
+}
