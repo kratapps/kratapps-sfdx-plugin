@@ -4,11 +4,7 @@
     "declaration": true,
     "outDir": "./lib",
     "importHelpers": true,
-    "rootDir": "./src",
-    "baseUrl": ".",
-    "paths": {
-      "lib/*": ["./src/lib/*"],
-    }
+    "rootDir": "./src"
   },
   "include": [
     "./src/**/*"

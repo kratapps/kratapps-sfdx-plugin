@@ -4,14 +4,14 @@ import { AnyJson, isArray, Optional } from '@salesforce/ts-types';
 import { dirSync } from 'tmp';
 import { outputFileSync } from 'fs-extra';
 import { join } from "path";
-import { cmd } from 'lib/command';
+import { cmd } from '../../../../lib/command';
 import {
   acceptHeader,
   getRepositoryContent,
   GithubContent,
   isGithubContent,
   StructuredFileLocation
-} from "lib/github";
+} from "../../../../lib/github";
 import rimraf = require('rimraf');
 
 Messages.importMessagesDirectory(__dirname);
@@ -55,7 +55,7 @@ export default class RemoteSourceDeploy extends SfdxCommand {
     this.ux.startSpinner(`loading source from github`);
     await this.retrieveSource(srcDir, owner, repo, path, token);
     this.ux.stopSpinner();
-    const sfdx = await cmd('sfdx', {
+    const sfdx = cmd('sfdx', {
       cwd: srcDir,
       printCommand: false
     });
@@ -67,20 +67,20 @@ export default class RemoteSourceDeploy extends SfdxCommand {
     return {};
   }
 
-  private async retrieveSource(dir: string, owner: string, repo: string, path: string, token: Optional<string>) {
+  private async retrieveSource(srcDir: string, owner: string, repo: string, path: string, token: Optional<string>) {
     this.ux.log(`loading source: sfdx-project.json`);
-    await this.retrieveFromGithubRecursive(dir, { owner, repo, path: 'sfdx-project.json' }, token);
+    await this.retrieveFromGithubRecursive(srcDir, { owner, repo, path: 'sfdx-project.json' }, token);
     try {
       this.ux.log(`loading source: .forceignore`);
-      await this.retrieveFromGithubRecursive(dir, { owner, repo, path: '.forceignore' }, token);
+      await this.retrieveFromGithubRecursive(srcDir, { owner, repo, path: '.forceignore' }, token);
     } catch (ignored) {
       this.ux.log('.forceignore not found');
     }
     this.ux.log(`loading source: ${path}`);
-    await this.retrieveFromGithubRecursive(dir, { owner, repo, path }, token);
+    await this.retrieveFromGithubRecursive(srcDir, { owner, repo, path }, token);
   }
 
-  private async retrieveFromGithubRecursive(baseDir: string, target: StructuredFileLocation | string, token: Optional<string>) {
+  private async retrieveFromGithubRecursive(srcDir: string, target: StructuredFileLocation | string, token: Optional<string>) {
     const promises = [];
     const content = await getRepositoryContent({
       target,
@@ -88,24 +88,22 @@ export default class RemoteSourceDeploy extends SfdxCommand {
       token
     });
     if (isGithubContent(content)) {
-      promises.push(this.processItem(baseDir, content, token));
+      promises.push(this.processItem(srcDir, content, token));
     } else if (isArray<GithubContent>(content)) {
       for (const item of content) {
-        promises.push(this.processItem(baseDir, item, token));
+        promises.push(this.processItem(srcDir, item, token));
       }
     }
     return Promise.all(promises);
   }
 
-  private async processItem(baseDir: string, content: GithubContent, token: Optional<string>) {
-    const promises = [];
+  private async processItem(srcDir: string, content: GithubContent, token: Optional<string>) {
     const { type, path, url, download_url: downloadUrl } = content;
     if (type === 'file' && downloadUrl) {
-      promises.push(this.saveFileFromGithub(join(baseDir, path), downloadUrl, token));
+      return this.saveFileFromGithub(join(srcDir, path), downloadUrl, token);
     } else if (type === 'dir') {
-      promises.push(this.retrieveFromGithubRecursive(baseDir, url, token));
+      return this.retrieveFromGithubRecursive(srcDir, url, token);
     }
-    return Promise.all(promises);
   }
 
   private async saveFileFromGithub(path: string, target: StructuredFileLocation | string, token: Optional<string>) {
