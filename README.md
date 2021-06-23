@@ -12,7 +12,7 @@ $ npm install -g @kratapps/sfdx-plugin
 $ sfdx COMMAND
 running command...
 $ sfdx (-v|--version|version)
-@kratapps/sfdx-plugin/0.0.0 darwin-x64 node-v14.15.0
+@kratapps/sfdx-plugin/0.1.0 darwin-x64 node-v14.15.0
 $ sfdx --help [COMMAND]
 USAGE
   $ sfdx COMMAND
