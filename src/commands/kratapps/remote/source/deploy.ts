@@ -22,7 +22,7 @@ export default class RemoteSourceDeploy extends SfdxCommand {
   public static description = `deploy source to an org from GitHub`;
 
   public static examples = [
-    `$ sfdx kratapps:remote:source:deploy --targetusername myOrg@example.com --sourcepath /kratapps/lwc-library/src/main/default/lwc
+    `$ sfdx kratapps:remote:source:deploy --targetusername myOrg@example.com --source https://github.com/kratapps/lwc-library --sourcepath src/main/default/lwc
   `
   ];
 
