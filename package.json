@@ -1,5 +1,5 @@
 {
-  "name": "kratapps-sfdx-plugin",
+  "name": "@kratapps/sfdx-plugin",
   "description": "Kratapps SFDX plugin",
   "version": "0.0.0",
   "author": "Kratapps",
