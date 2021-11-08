@@ -42,13 +42,16 @@ export default class RemoteSourceDeploy extends SfdxCommand {
     token: flags.string({
       char: 't',
       description: messages.getMessage('tokenFlagDescription'),
+    }),
+    ref: flags.string({
+      description: messages.getMessage('refFlagDescription'),
     })
   };
 
   protected static requiresUsername = true;
 
   public async run(): Promise<AnyJson> {
-    const { sourcepath, source, targetusername } = this.flags;
+    const { sourcepath, source, targetusername, ref } = this.flags;
     const token = this.flags.token || process.env.KRATAPPS_GH_ACCESS_TOKEN || undefined;
     const sourceMatch = source.replace(/(\/)$/, "").match(new RegExp('https://(.*?)/(.*?)/(.*)'));
     if (!sourceMatch) {
@@ -57,7 +60,7 @@ export default class RemoteSourceDeploy extends SfdxCommand {
     const [, service, owner, repo] = sourceMatch;
     const { name: srcDir } = dirSync();
     this.ux.startSpinner(`loading source from ${service}`);
-    await this.retrieveSource(srcDir, owner, repo, sourcepath.split(','), token);
+    await this.retrieveSource(srcDir, owner, repo, sourcepath.split(','), ref, token);
     this.ux.stopSpinner();
     const sfdx = cmd('sfdx', {
       cwd: srcDir,
@@ -76,18 +79,19 @@ export default class RemoteSourceDeploy extends SfdxCommand {
     return {};
   }
 
-  private async retrieveSource(srcDir: string, owner: string, repo: string, paths: string[], token: Optional<string>) {
+  private async retrieveSource(srcDir: string, owner: string, repo: string, paths: string[], ref: Optional<string>, token: Optional<string>) {
+    console.log({ref})
     this.ux.log(`loading source: sfdx-project.json`);
-    await this.retrieveFromGithubRecursive(srcDir, { owner, repo, path: 'sfdx-project.json' }, token);
+    await this.retrieveFromGithubRecursive(srcDir, { owner, repo, path: 'sfdx-project.json', ref }, token);
     try {
       this.ux.log(`loading source: .forceignore`);
-      await this.retrieveFromGithubRecursive(srcDir, { owner, repo, path: '.forceignore' }, token);
+      await this.retrieveFromGithubRecursive(srcDir, { owner, repo, path: '.forceignore', ref }, token);
     } catch (ignored) {
       this.ux.log('.forceignore not found');
     }
     for (const path of paths) {
       this.ux.log(`loading source: ${path}`);
-      await this.retrieveFromGithubRecursive(srcDir, { owner, repo, path }, token);
+      await this.retrieveFromGithubRecursive(srcDir, { owner, repo, path, ref }, token);
     }
   }
 
