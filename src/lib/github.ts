@@ -15,6 +15,7 @@ export type StructuredFileLocation = {
   owner: string;
   repo: string;
   path: string;
+  ref?: string;
 }
 
 export type GetRepositoryContentOptions = {
@@ -38,9 +39,11 @@ export function isGithubContent(it: unknown): it is GithubContent {
 export async function getRepositoryContent(opts: GetRepositoryContentOptions)
   : Promise<Many<GithubContent> | string> {
   const { target, accept, token } = opts;
+  const refQuery = (ref: string) => ref ? `ref=${ref}` : '';
   const url = isString(target)
     ? target
-    : `https://api.github.com/repos/${target.owner}/${target.repo}/contents/${target.path}`;
+    : `https://api.github.com/repos/${target.owner}/${target.repo}/contents/${target.path}?${refQuery(target.ref)}`;
+  console.log(url);
   const resp = await fetch(url, {
       headers: {
         accept,
