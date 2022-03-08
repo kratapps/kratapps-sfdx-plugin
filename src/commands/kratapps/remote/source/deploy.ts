@@ -20,6 +20,7 @@ const messages = Messages.loadMessages('@kratapps/sfdx-plugin', 'remoteSourceDep
 
 export default class RemoteSourceDeploy extends SfdxCommand {
   public static description = `deploy source to an org from GitHub`;
+  public static help = `deploy source to an org from GitHub`;
 
   public static examples = [
     `$ sfdx kratapps:remote:source:deploy --targetusername myOrg --source https://github.com/kratapps/lwc-library --sourcepath src/main/default/lwc/spinner
