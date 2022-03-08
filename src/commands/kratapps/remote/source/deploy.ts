@@ -51,7 +51,8 @@ export default class RemoteSourceDeploy extends SfdxCommand {
   protected static requiresUsername = true;
 
   public async run(): Promise<AnyJson> {
-    const { sourcepath, source, targetusername, ref } = this.flags;
+    const { sourcepath, source, ref } = this.flags;
+    const targetusername = this.org.getUsername();
     const token = this.flags.token || process.env.KRATAPPS_GH_ACCESS_TOKEN || undefined;
     const sourceMatch = source.replace(/(\/)$/, "").match(new RegExp('https://(.*?)/(.*?)/(.*)'));
     if (!sourceMatch) {
