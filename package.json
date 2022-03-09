@@ -1,7 +1,7 @@
 {
   "name": "@kratapps/sfdx-plugin",
   "description": "Kratapps SFDX plugin",
-  "version": "0.2.1",
+  "version": "0.2.2",
   "author": "Kratapps",
   "bugs": "https://github.com/kratapps/kratapps-sfdx-plugin/issues",
   "dependencies": {
