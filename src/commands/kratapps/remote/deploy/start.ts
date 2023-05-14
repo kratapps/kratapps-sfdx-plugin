@@ -53,6 +53,7 @@ export default class RemoteDeployStart extends SfCommand<DeployResultJson> {
             char: 'd',
             description: messages.getMessage('sourceDirFlagDescription'),
             summary: messages.getMessage('sourceDirFlagDescription'),
+            multiple: true,
             required: true
         }),
         token: Flags.string({
@@ -70,23 +71,26 @@ export default class RemoteDeployStart extends SfCommand<DeployResultJson> {
         const repoOwner = ensureString(flags["repo-owner"], 'repo-owner must be a string');
         const repoName = ensureString(flags["repo-name"], 'repo-name must be a string');
         const repoRef = flags["repo-ref"];
-        let sourceDir = flags["source-dir"];
+        const sourceDirs = flags["source-dir"];
         const token = flags.token;
         const { name: projectDir } = dirSync();
         process.chdir(projectDir);
         outputFileSync(`${projectDir}/sfdx-project.json`, JSON.stringify(this.createSfdxProjectJsonData()));
         const sfProject = await SfProject.resolve(projectDir);
         this.spinner.start(`Downloading source from GitHub repo ${repoOwner}/${repoName}${repoRef ? `:${repoRef}` : ''}`);
-        await this.retrieveFromGithubRecursive(projectDir, {
-            owner: repoOwner,
-            repo: repoName,
-            path: sourceDir,
-            ref: repoRef
-        }, token);
+        for (let sourceDir of sourceDirs) {
+            await this.retrieveFromGithubRecursive(projectDir, {
+                owner: repoOwner,
+                repo: repoName,
+                path: sourceDir,
+                ref: repoRef
+            }, token);
+        }
         this.spinner.stop();
         await this.deploy({
             sfProject,
-            targetOrg
+            targetOrg,
+            sourceDirs
         });
         this.spinner.start('Cleanup');
         rimraf.sync(projectDir);
@@ -94,11 +98,11 @@ export default class RemoteDeployStart extends SfCommand<DeployResultJson> {
         return {};
     }
 
-    private async deploy({ sfProject, targetOrg }: { sfProject: SfProject, targetOrg: Org }) {
+    private async deploy({ sfProject, targetOrg, sourceDirs }: { sfProject: SfProject, targetOrg: Org, sourceDirs: string[] }) {
         const { flags } = await this.parse(RemoteDeployStart);
         const api = await resolveApi(this.configAggregator);
         const { deploy, componentSet } = await executeDeploy({
-                "source-dir": [`src/${flags['source-dir']}`],
+                "source-dir": sourceDirs.map(it => `src/${it}`),
                 "target-org": targetOrg.getUsername(),
                 "ignore-conflicts": true,
                 api,
