@@ -23,7 +23,7 @@ export default class RemoteSourceDeploy extends SfdxCommand {
   public static help = `deploy source to an org from GitHub`;
 
   public static examples = [
-    `$ sfdx kratapps:remote:source:deploy --targetusername myOrg --source https://github.com/kratapps/lwc-library --sourcepath src/main/default/lwc/spinner
+    `$ sfdx kratapps:remote:source:deploy --targetusername myOrg --source https://github.com/kratapps/component-library --sourcepath src/main/default/lwc/spinner
   `
   ];
 
@@ -82,7 +82,6 @@ export default class RemoteSourceDeploy extends SfdxCommand {
   }
 
   private async retrieveSource(srcDir: string, owner: string, repo: string, paths: string[], ref: Optional<string>, token: Optional<string>) {
-    console.log({ref})
     this.ux.log(`loading source: sfdx-project.json`);
     await this.retrieveFromGithubRecursive(srcDir, { owner, repo, path: 'sfdx-project.json', ref }, token);
     try {
