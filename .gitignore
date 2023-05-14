@@ -11,3 +11,6 @@ node_modules
 
 .circleci/
 .env
+oclif.manifest.json
+tsconfig.tsbuildinfo
+.wireit

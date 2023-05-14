@@ -1,5 +1,7 @@
 import { spawn, SpawnOptions } from 'child_process';
 import { statSync } from 'fs-extra';
+import { definiteValuesOf, asBoolean } from "@salesforce/ts-types";
+import { RequiredNonOptional } from "@salesforce/ts-types/lib/types/conditional";
 
 export interface ObjectOption {
   [key: string]: string | boolean | number | undefined | null;
@@ -97,7 +99,7 @@ export class Command {
 
   public transform: TransformOption = defaultTransform;
   private readonly _name: string;
-  private readonly _options: CommandOptions;
+  private readonly _options: RequiredNonOptional<CommandOptions>;
 
   constructor(name: string, options: CommandOptions = {}) {
     this._name = name;
@@ -105,7 +107,7 @@ export class Command {
       cwd: process.cwd(),
       printCommand: true,
       quiet: false,
-      ...options
+      ...definiteValuesOf(options)
     };
   }
 
@@ -153,8 +155,8 @@ export class Command {
    */
   public async exec(...options: Options[]): Promise<any> {
     const argsObj: ArgsObject = transformOptions(options, this.transform);
-    const quiet = isBoolean(argsObj.quiet) ? argsObj.quiet : this._options.quiet;
-    const printCommand = isBoolean(argsObj.printCommand) ? argsObj.printCommand : this._options.printCommand;
+    const quiet = asBoolean(argsObj.quiet, this._options.quiet);
+    const printCommand = asBoolean(argsObj.printCommand, this._options.printCommand);
     const cwd = argsObj.cwd ? argsObj.cwd : this._options.cwd;
     const execCommand = `${this._name} ${argsObj.args.join(' ')}`;
     if (!quiet && printCommand) {
@@ -185,7 +187,7 @@ async function spawnProcess(bin: string, args: string[], quiet: boolean, cwd: st
     spawned.on('error', (err: any) => {
       try {
         statSync(cwd);
-      } catch (e) {
+      } catch (e: any) {
         if (e.code === 'ENOENT') {
           reject(`The specified cwd does not exist: ${cwd}`);
         }
@@ -236,7 +238,7 @@ function transformFirstOption(opt: ObjectOption, transform: TransformOption): Ar
     } else if (flagName === 'printCommand') {
       argsObj.printCommand = flagValue === true;
     } else if (flagName === 'cwd') {
-      argsObj.cwd = flagValue.toString();
+      argsObj.cwd = flagValue!.toString();
     } else {
       filteredOption[flagName] = flagValue;
     }

@@ -19,8 +19,8 @@ Messages.importMessagesDirectory(__dirname);
 const messages = Messages.loadMessages('@kratapps/sfdx-plugin', 'remoteSourceDeploy');
 
 export default class RemoteSourceDeploy extends SfdxCommand {
-  public static description = `deploy source to an org from GitHub`;
-  public static help = `deploy source to an org from GitHub`;
+  public static description = `Deprecated. Use "kratapps remote deploy start" instead. Deploy source to an org from GitHub.`;
+  public static help = `Deprecated. Use "kratapps remote deploy start" instead. Deploy source to an org from GitHub.`;
 
   public static examples = [
     `$ sfdx kratapps:remote:source:deploy --targetusername myOrg --source https://github.com/kratapps/component-library --sourcepath src/main/default/lwc/spinner
@@ -53,7 +53,7 @@ export default class RemoteSourceDeploy extends SfdxCommand {
 
   public async run(): Promise<AnyJson> {
     const { sourcepath, source, ref } = this.flags;
-    const targetusername = this.org.getUsername();
+    const targetusername = this.org!.getUsername();
     const token = this.flags.token || process.env.KRATAPPS_GH_ACCESS_TOKEN || undefined;
     const sourceMatch = source.replace(/(\/)$/, "").match(new RegExp('https://(.*?)/(.*?)/(.*)'));
     if (!sourceMatch) {
@@ -96,7 +96,7 @@ export default class RemoteSourceDeploy extends SfdxCommand {
     }
   }
 
-  private async retrieveFromGithubRecursive(srcDir: string, target: StructuredFileLocation | string, token: Optional<string>) {
+  private async retrieveFromGithubRecursive(srcDir: string, target: StructuredFileLocation | string, token: Optional<string>): Promise<void> {
     const promises = [];
     const content = await getRepositoryContent({
       target,
@@ -110,7 +110,7 @@ export default class RemoteSourceDeploy extends SfdxCommand {
         promises.push(this.processItem(srcDir, item, token));
       }
     }
-    return Promise.all(promises);
+    await Promise.all(promises);
   }
 
   private async processItem(srcDir: string, content: GithubContent, token: Optional<string>) {
