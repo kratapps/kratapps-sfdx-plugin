@@ -36,18 +36,18 @@ export default class RemoteDeployStart extends SfCommand<DeployResultJson> {
             required: true,
         }),
         "repo-owner": Flags.string({
-            description: messages.getMessage('sourceUrlFlagDescription'),
-            summary: messages.getMessage('sourceUrlFlagDescription'),
+            description: messages.getMessage('repoOwnerFlagDescription'),
+            summary: messages.getMessage('repoOwnerFlagDescription'),
             required: true
         }),
         "repo-name": Flags.string({
-            description: messages.getMessage('sourceUrlFlagDescription'),
-            summary: messages.getMessage('sourceUrlFlagDescription'),
+            description: messages.getMessage('repoNameFlagDescription'),
+            summary: messages.getMessage('repoNameFlagDescription'),
             required: true
         }),
         "repo-ref": Flags.string({
-            description: messages.getMessage('sourceUrlFlagDescription'),
-            summary: messages.getMessage('sourceUrlFlagDescription'),
+            description: messages.getMessage('repoRefFlagDescription'),
+            summary: messages.getMessage('repoRefFlagDescription'),
         }),
         "source-dir": Flags.string({
             char: 'd',

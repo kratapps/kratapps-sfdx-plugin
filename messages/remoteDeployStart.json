@@ -3,8 +3,9 @@
   "summary": "Deploy remote code, for example from GitHub.",
   "examples": "sfdx kratapps remote deploy tart",
   "targetOrgFlagDescription": "Login username or alias for the target org.",
-  "sourceUrlFlagDescription": "Origin, usually Github repo link, https://github.com/kratapps/component-library",
+  "repoOwnerFlagDescription": "Repository owner.",
+  "repoNameFlagDescription": "Repository name.",
+  "repoRefFlagDescription": "Reference, could be a git branch name, rev, tag.",
   "sourceDirFlagDescription": "Path to the remote source files to deploy.",
-  "tokenFlagDescription": "API token.",
-  "refFlagDescription": "Reference, could be a git branch name, rev, tag."
+  "tokenFlagDescription": "API token."
 }
