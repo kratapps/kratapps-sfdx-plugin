@@ -7,5 +7,6 @@
   "repoNameFlagDescription": "Repository name.",
   "repoRefFlagDescription": "Reference, could be a git branch name, rev, tag.",
   "sourceDirFlagDescription": "Path to the remote source files to deploy.",
+  "metadataFlagSummary": "Metadata component names to deploy.",
   "tokenFlagDescription": "API token."
 }
