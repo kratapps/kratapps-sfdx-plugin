@@ -1,7 +1,8 @@
 # Kratapps SFDX plugin
 
 <!-- toc -->
-* [Kratapps SFDX plugin](#kratapps-sfdx-plugin)
+
+- [Kratapps SFDX plugin](#kratapps-sfdx-plugin)
 <!-- tocstop -->
 
 <!-- install -->
@@ -11,42 +12,74 @@ sfdx plugins:install @kratapps/sfdx-plugin
 ```
 
 <!-- commands -->
-* [`sfdx kratapps:remote:deploy:start -d <string> [--token <string>] [--ref <string>] [-u <string>] [--apiversion <string>] [--json] [--loglevel trace|debug|info|warn|error|fatal|TRACE|DEBUG|INFO|WARN|ERROR|FATAL]`](#sfdx-kratappsremotedeploystart--d-string---token-string---ref-string--u-string---apiversion-string---json---loglevel-tracedebuginfowarnerrorfataltracedebuginfowarnerrorfatal)
-* [`sfdx kratapps:remote:source:deploy -p <string> -s <string> [-t <string>] [--ref <string>] [-u <string>] [--apiversion <string>] [--json] [--loglevel trace|debug|info|warn|error|fatal|TRACE|DEBUG|INFO|WARN|ERROR|FATAL]`](#sfdx-kratappsremotesourcedeploy--p-string--s-string--t-string---ref-string--u-string---apiversion-string---json---loglevel-tracedebuginfowarnerrorfataltracedebuginfowarnerrorfatal)
 
-## `sfdx kratapps:remote:deploy:start -d <string> [--token <string>] [--ref <string>] [-u <string>] [--apiversion <string>] [--json] [--loglevel trace|debug|info|warn|error|fatal|TRACE|DEBUG|INFO|WARN|ERROR|FATAL]`
+- [`sfdx kratapps remote deploy start`](#sfdx-kratapps-remote-deploy-start)
+- [`sfdx kratapps:remote:source:deploy -p <string> -s <string> [-t <string>] [--ref <string>] [-u <string>] [--apiversion <string>] [--json] [--loglevel trace|debug|info|warn|error|fatal|TRACE|DEBUG|INFO|WARN|ERROR|FATAL]`](#sfdx-kratappsremotesourcedeploy--p-string--s-string--t-string---ref-string--u-string---apiversion-string---json---loglevel-tracedebuginfowarnerrorfataltracedebuginfowarnerrorfatal)
 
-description
+## `sfdx kratapps remote deploy start`
+
+Deploy remote code, for example from GitHub.
 
 ```
-description
-
 USAGE
-  $ sfdx kratapps:remote:deploy:start -d <string> [--token <string>] [--ref <string>] [-u <string>] [--apiversion 
-  <string>] [--json] [--loglevel trace|debug|info|warn|error|fatal|TRACE|DEBUG|INFO|WARN|ERROR|FATAL]
+  $ sfdx kratapps remote deploy start -o <value> --repo-owner <value> --repo-name <value> [--json] [--repo-ref <value>] [-d
+    <value> | -m <value>] [--token <value>]
 
-OPTIONS
-  -d, --source-dir=source-dir                                                       (required) Path to the remote source
-                                                                                    files to deploy.
+FLAGS
+  -d, --source-dir=<value>...  Path to the remote source files to deploy.
+  -m, --metadata=<value>...    Metadata component names to deploy.
+  -o, --target-org=<value>     (required) Login username or alias for the target org.
+  --repo-name=<value>          (required) Repository name.
+  --repo-owner=<value>         (required) Repository owner.
+  --repo-ref=<value>           Reference, could be a git branch name, rev, tag.
+  --token=<value>              API token to the external service, e.g. GitHub API Token. Required for private
+                               repositories and to increase GitHub API request limit.
 
-  -u, --targetusername=targetusername                                               username or alias for the target
-                                                                                    org; overrides default target org
+GLOBAL FLAGS
+  --json  Format output as json.
 
-  --apiversion=apiversion                                                           override the api version used for
-                                                                                    api requests made by this command
+DESCRIPTION
+  Deploy remote code, for example from GitHub.
 
-  --json                                                                            format output as json
+  Deploy remote code, for example from GitHub.
 
-  --loglevel=(trace|debug|info|warn|error|fatal|TRACE|DEBUG|INFO|WARN|ERROR|FATAL)  [default: warn] logging level for
-                                                                                    this command invocation
+EXAMPLES
+  $ sfdx kratapps remote deploy start --repo-owner kratapps --repo-name component-library --source-dir src/main/default/lwc/spinner/
 
-  --ref=ref                                                                         Reference, could be a git branch
-                                                                                    name, rev, tag.
+  $ sfdx kratapps remote deploy start --repo-owner kratapps --repo-name component-library --metadata LightningComponentBundle:spinner
 
-  --token=token                                                                     API token.
+FLAG DESCRIPTIONS
+  -d, --source-dir=<value>...  Path to the remote source files to deploy.
 
-EXAMPLE
-  $ sfdx kratapps remote deploy tart
+    Path to the remote source files to deploy.
+
+  -m, --metadata=<value>...  Metadata component names to deploy.
+
+    Metadata component names to deploy.
+
+  -o, --target-org=<value>  Login username or alias for the target org.
+
+    Login username or alias for the target org.
+
+  --repo-name=<value>  Repository name.
+
+    Repository name.
+
+  --repo-owner=<value>  Repository owner.
+
+    Repository owner.
+
+  --repo-ref=<value>  Reference, could be a git branch name, rev, tag.
+
+    Reference, could be a git branch name, rev, tag.
+
+  --token=<value>
+
+    API token to the external service, e.g. GitHub API Token. Required for private repositories and to increase GitHub
+    API request limit.
+
+    API token to the external service, e.g. GitHub API Token. Required for private repositories and to increase GitHub
+    API request limit.
 ```
 
 ## `sfdx kratapps:remote:source:deploy -p <string> -s <string> [-t <string>] [--ref <string>] [-u <string>] [--apiversion <string>] [--json] [--loglevel trace|debug|info|warn|error|fatal|TRACE|DEBUG|INFO|WARN|ERROR|FATAL]`
@@ -54,38 +87,31 @@ EXAMPLE
 Deprecated. Use "kratapps remote deploy start" instead. Deploy source to an org from GitHub.
 
 ```
-Deprecated. Use "kratapps remote deploy start" instead. Deploy source to an org from GitHub.
-
 USAGE
-  $ sfdx kratapps:remote:source:deploy -p <string> -s <string> [-t <string>] [--ref <string>] [-u <string>] 
-  [--apiversion <string>] [--json] [--loglevel trace|debug|info|warn|error|fatal|TRACE|DEBUG|INFO|WARN|ERROR|FATAL]
+  $ sfdx kratapps remote source deploy -p <string> -s <string> [-t <string>] [--ref <string>] [-u <string>] [--apiversion <string>]
+    [--json] [--loglevel trace|debug|info|warn|error|fatal|TRACE|DEBUG|INFO|WARN|ERROR|FATAL]
 
-OPTIONS
-  -p, --sourcepath=sourcepath                                                       (required) comma-separated list of
+FLAGS
+  -p, --sourcepath=<value>                                                          (required) comma-separated list of
                                                                                     paths to the github source files to
                                                                                     deploy
-
-  -s, --source=source                                                               (required) remote source, e.g.
-                                                                                    https://github.com/kratapps/lwc-libr
-                                                                                    ary
-
-  -t, --token=token                                                                 external service access token
-
-  -u, --targetusername=targetusername                                               username or alias for the target
+  -s, --source=<value>                                                              (required) remote source, e.g. https
+                                                                                    ://github.com/kratapps/lwc-library
+  -t, --token=<value>                                                               external service access token
+  -u, --targetusername=<value>                                                      username or alias for the target
                                                                                     org; overrides default target org
-
-  --apiversion=apiversion                                                           override the api version used for
+  --apiversion=<value>                                                              override the api version used for
                                                                                     api requests made by this command
-
   --json                                                                            format output as json
-
   --loglevel=(trace|debug|info|warn|error|fatal|TRACE|DEBUG|INFO|WARN|ERROR|FATAL)  [default: warn] logging level for
                                                                                     this command invocation
+  --ref=<value>                                                                     reference, e.g. main
 
-  --ref=ref                                                                         reference, e.g. main
+DESCRIPTION
+  Deprecated. Use "kratapps remote deploy start" instead. Deploy source to an org from GitHub.
 
-EXAMPLE
-  $ sfdx kratapps:remote:source:deploy --targetusername myOrg --source https://github.com/kratapps/component-library 
-  --sourcepath src/main/default/lwc/spinner
+EXAMPLES
+  $ sfdx kratapps:remote:source:deploy --targetusername myOrg --source https://github.com/kratapps/component-library --sourcepath src/main/default/lwc/spinner
 ```
+
 <!-- commandsstop -->

@@ -1,12 +1,15 @@
 {
   "description": "Deploy remote code, for example from GitHub.",
   "summary": "Deploy remote code, for example from GitHub.",
-  "examples": "sfdx kratapps remote deploy tart",
-  "targetOrgFlagDescription": "Login username or alias for the target org.",
-  "repoOwnerFlagDescription": "Repository owner.",
-  "repoNameFlagDescription": "Repository name.",
-  "repoRefFlagDescription": "Reference, could be a git branch name, rev, tag.",
-  "sourceDirFlagDescription": "Path to the remote source files to deploy.",
+  "examples": [
+    "sfdx kratapps remote deploy start --repo-owner kratapps --repo-name component-library --source-dir src/main/default/lwc/spinner/",
+    "sfdx kratapps remote deploy start --repo-owner kratapps --repo-name component-library --metadata LightningComponentBundle:spinner"
+  ],
+  "targetOrgFlagSummary": "Login username or alias for the target org.",
+  "repoOwnerFlagSummary": "Repository owner.",
+  "repoNameFlagSummary": "Repository name.",
+  "repoRefFlagSummary": "Reference, could be a git branch name, rev, tag.",
+  "sourceDirFlagSummary": "Path to the remote source files to deploy.",
   "metadataFlagSummary": "Metadata component names to deploy.",
-  "tokenFlagDescription": "API token."
+  "tokenFlagSummary": "API token to the external service, e.g. GitHub API Token. Required for private repositories and to increase GitHub API request limit."
 }

@@ -3,16 +3,16 @@ import { Messages, SfdxError } from '@salesforce/core';
 import { AnyJson, isArray, Optional } from '@salesforce/ts-types';
 import { dirSync } from 'tmp';
 import { outputFileSync } from 'fs-extra';
-import { join } from "path";
+import { join } from 'path';
 import { cmd } from '../../../../lib/command';
 import {
   acceptHeader,
   getRepositoryContent,
   GithubContent,
   isGithubContent,
-  StructuredFileLocation
-} from "../../../../lib/github";
-import rimraf = require("rimraf");
+  StructuredFileLocation,
+} from '../../../../lib/github';
+import rimraf = require('rimraf');
 
 Messages.importMessagesDirectory(__dirname);
 
@@ -24,7 +24,7 @@ export default class RemoteSourceDeploy extends SfdxCommand {
 
   public static examples = [
     `$ sfdx kratapps:remote:source:deploy --targetusername myOrg --source https://github.com/kratapps/component-library --sourcepath src/main/default/lwc/spinner
-  `
+  `,
   ];
 
   public static args = [];
@@ -33,12 +33,12 @@ export default class RemoteSourceDeploy extends SfdxCommand {
     sourcepath: flags.string({
       char: 'p',
       description: messages.getMessage('sourcepathFlagDescription'),
-      required: true
+      required: true,
     }),
     source: flags.string({
       char: 's',
       description: messages.getMessage('sourceFlagDescription'),
-      required: true
+      required: true,
     }),
     token: flags.string({
       char: 't',
@@ -46,16 +46,17 @@ export default class RemoteSourceDeploy extends SfdxCommand {
     }),
     ref: flags.string({
       description: messages.getMessage('refFlagDescription'),
-    })
+    }),
   };
 
   protected static requiresUsername = true;
 
   public async run(): Promise<AnyJson> {
+    this.ux.warn('This command is deprecated, use kratapps:remote:deploy:start instead.');
     const { sourcepath, source, ref } = this.flags;
     const targetusername = this.org!.getUsername();
     const token = this.flags.token || process.env.KRATAPPS_GH_ACCESS_TOKEN || undefined;
-    const sourceMatch = source.replace(/(\/)$/, "").match(new RegExp('https://(.*?)/(.*?)/(.*)'));
+    const sourceMatch = source.replace(/(\/)$/, '').match(new RegExp('https://(.*?)/(.*?)/(.*)'));
     if (!sourceMatch) {
       throw new SfdxError(`Invalid source: ${source}`);
     }
@@ -66,13 +67,16 @@ export default class RemoteSourceDeploy extends SfdxCommand {
     this.ux.stopSpinner();
     const sfdx = cmd('sfdx', {
       cwd: srcDir,
-      printCommand: true
+      printCommand: true,
     });
     try {
-      await sfdx.exec(['force:source:deploy', {
-        sourcepath,
-        targetusername
-      }]);
+      await sfdx.exec([
+        'force:source:deploy',
+        {
+          sourcepath,
+          targetusername,
+        },
+      ]);
     } catch (e) {
       throw new SfdxError('SourceDeployCommand failed');
     } finally {
@@ -81,7 +85,14 @@ export default class RemoteSourceDeploy extends SfdxCommand {
     return {};
   }
 
-  private async retrieveSource(srcDir: string, owner: string, repo: string, paths: string[], ref: Optional<string>, token: Optional<string>) {
+  private async retrieveSource(
+    srcDir: string,
+    owner: string,
+    repo: string,
+    paths: string[],
+    ref: Optional<string>,
+    token: Optional<string>
+  ) {
     this.ux.log(`loading source: sfdx-project.json`);
     await this.retrieveFromGithubRecursive(srcDir, { owner, repo, path: 'sfdx-project.json', ref }, token);
     try {
@@ -96,12 +107,16 @@ export default class RemoteSourceDeploy extends SfdxCommand {
     }
   }
 
-  private async retrieveFromGithubRecursive(srcDir: string, target: StructuredFileLocation | string, token: Optional<string>): Promise<void> {
+  private async retrieveFromGithubRecursive(
+    srcDir: string,
+    target: StructuredFileLocation | string,
+    token: Optional<string>
+  ): Promise<void> {
     const promises = [];
     const content = await getRepositoryContent({
       target,
       accept: acceptHeader.json,
-      token
+      token,
     });
     if (isGithubContent(content)) {
       promises.push(this.processItem(srcDir, content, token));
@@ -126,7 +141,7 @@ export default class RemoteSourceDeploy extends SfdxCommand {
     const data = await getRepositoryContent({
       target,
       accept: acceptHeader.raw,
-      token
+      token,
     });
     return outputFileSync(path, data);
   }
