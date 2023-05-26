@@ -1,7 +1,7 @@
 {
   "name": "@kratapps/sfdx-plugin",
   "description": "Kratapps SFDX plugin",
-  "version": "0.2.2",
+  "version": "0.3.0",
   "author": "Kratapps",
   "bugs": "https://github.com/kratapps/kratapps-sfdx-plugin/issues",
   "dependencies": {
@@ -21,7 +21,6 @@
   },
   "devDependencies": {
     "@oclif/dev-cli": "^1",
-    "@oclif/test": "^1",
     "@salesforce/cli-plugins-testkit": "^3.4.0",
     "@salesforce/dev-config": "^3.1.0",
     "@salesforce/dev-scripts": "^4.3.1",
@@ -46,7 +45,6 @@
     "eslint": "^8.21.0",
     "eslint-config-prettier": "^8.5.0",
     "eslint-config-salesforce": "^1.1.0",
-    "eslint-config-salesforce-license": "^0.1.6",
     "eslint-config-salesforce-typescript": "^1.1.1",
     "eslint-plugin-header": "^3.0.0",
     "eslint-plugin-import": "^2.26.0",
@@ -118,7 +116,6 @@
     "format": "wireit",
     "postpack": "rm -f oclif.manifest.json",
     "prepack": "sf-prepack",
-    "prepare": "sf-install",
     "version": "oclif readme"
   },
   "wireit": {
@@ -148,67 +145,6 @@
         "schemas/**/*.json",
         "command-snapshot.json",
         ".prettier*"
-      ],
-      "output": []
-    },
-    "test:compile": {
-      "command": "tsc -p \"./test\" --pretty",
-      "files": [
-        "test/**/*.ts",
-        "**/tsconfig.json"
-      ],
-      "output": []
-    },
-    "test": {
-      "dependencies": [
-        "test:compile",
-        "test:only",
-        "test:command-reference",
-        "test:deprecation-policy",
-        "test:json-schema"
-      ]
-    },
-    "test:only": {
-      "command": "nyc mocha \"test/**/*.test.ts\"",
-      "env": {
-        "FORCE_COLOR": "2"
-      },
-      "files": [
-        "test/**/*.ts",
-        "src/**/*.ts",
-        "**/tsconfig.json",
-        ".mocha*",
-        "!*.nut.ts",
-        ".nycrc"
-      ],
-      "output": []
-    },
-    "test:command-reference": {
-      "command": "\"./bin/dev\" commandreference:generate --erroronwarnings",
-      "files": [
-        "src/**/*.ts",
-        "messages/**",
-        "package.json"
-      ],
-      "output": [
-        "tmp/root"
-      ]
-    },
-    "test:deprecation-policy": {
-      "command": "\"./bin/dev\" snapshot:compare",
-      "files": [
-        "src/**/*.ts"
-      ],
-      "output": [],
-      "dependencies": [
-        "compile"
-      ]
-    },
-    "test:json-schema": {
-      "command": "\"./bin/dev\" schema:compare",
-      "files": [
-        "src/**/*.ts",
-        "schemas"
       ],
       "output": []
     }
