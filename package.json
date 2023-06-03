@@ -118,7 +118,8 @@
     "format": "wireit",
     "postpack": "rm -f oclif.manifest.json",
     "prepack": "sf-prepack",
-    "version": "oclif readme"
+    "version": "oclif readme",
+    "publish": "npm publish @kratapps/sfdx-plugin"
   },
   "wireit": {
     "build": {
