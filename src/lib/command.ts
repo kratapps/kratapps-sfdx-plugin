@@ -1,10 +1,10 @@
 import { spawn, SpawnOptions } from 'child_process';
 import { statSync } from 'fs-extra';
-import { definiteValuesOf, asBoolean } from "@salesforce/ts-types";
-import { RequiredNonOptional } from "@salesforce/ts-types/lib/types/conditional";
+import { definiteValuesOf, asBoolean } from '@salesforce/ts-types';
+import { RequiredNonOptional } from '@salesforce/ts-types/lib/types/conditional';
 
 export interface ObjectOption {
-  [key: string]: string | boolean | number | undefined | null;
+    [key: string]: string | boolean | number | undefined | null;
 }
 
 export type Option = ObjectOption | string;
@@ -14,10 +14,10 @@ export type Options = Option | Option[];
 export type TransformOption = (opt: ObjectOption) => string[];
 
 export interface ArgsObject {
-  args: string[];
-  cwd?: string;
-  printCommand?: boolean;
-  quiet?: boolean;
+    args: string[];
+    cwd?: string;
+    printCommand?: boolean;
+    quiet?: boolean;
 }
 
 /**
@@ -28,9 +28,9 @@ export interface ArgsObject {
  * @see {Option}
  */
 export interface CommandOptions {
-  cwd?: string;
-  printCommand?: boolean;
-  quiet?: boolean;
+    cwd?: string;
+    printCommand?: boolean;
+    quiet?: boolean;
 }
 
 /**
@@ -40,7 +40,7 @@ export interface CommandOptions {
  * @param options the command options
  */
 export function cmd(name: string, options: CommandOptions = {}): Command {
-  return new Command(name, options);
+    return new Command(name, options);
 }
 
 /**
@@ -56,7 +56,7 @@ export function cmd(name: string, options: CommandOptions = {}): Command {
  * @param options the command options
  */
 export function build(name: string, ...options: Options[]): string {
-  return cmd(name).build(...options);
+    return cmd(name).build(...options);
 }
 
 /**
@@ -71,7 +71,7 @@ export function build(name: string, ...options: Options[]): string {
  * @param options the command options
  */
 export function buildArgs(...options: Options[]): string[] {
-  return cmd('').buildArgs(...options);
+    return cmd('').buildArgs(...options);
 }
 
 /**
@@ -87,7 +87,7 @@ export function buildArgs(...options: Options[]): string[] {
  * @param options the command options
  */
 export async function exec(name: string, ...options: Options[]): Promise<any> {
-  return cmd(name).exec(...options);
+    return cmd(name).exec(...options);
 }
 
 /**
@@ -96,175 +96,174 @@ export async function exec(name: string, ...options: Options[]): Promise<any> {
  * Includes methods build and exec.
  */
 export class Command {
+    public transform: TransformOption = defaultTransform;
+    private readonly _name: string;
+    private readonly _options: RequiredNonOptional<CommandOptions>;
 
-  public transform: TransformOption = defaultTransform;
-  private readonly _name: string;
-  private readonly _options: RequiredNonOptional<CommandOptions>;
-
-  constructor(name: string, options: CommandOptions = {}) {
-    this._name = name;
-    this._options = {
-      cwd: process.cwd(),
-      printCommand: true,
-      quiet: false,
-      ...definiteValuesOf(options)
-    };
-  }
-
-  /**
-   * Build the command as a string without executing it.
-   *
-   * Examples:
-   *
-   * cmd('npm').build({version: true});
-   *
-   * cmd('java').build('-version');
-   *
-   * @param options the command options
-   */
-  public build(...options: Options[]): string {
-    const argsObj: ArgsObject = transformOptions(options, this.transform);
-    return `${this._name} ${argsObj.args.join(' ')}`;
-  }
-
-  /**
-   * Build command args as a string array without executing it.
-   *
-   * Examples:
-   *
-   * cmd('npm').buildArgs({version: true});
-   *
-   * cmd('java').buildArgs('-version');
-   *
-   * @param options the command options
-   */
-  public buildArgs(...options: Options[]): string[] {
-    return transformOptions(options, this.transform).args;
-  }
-
-  /**
-   * Execute the command.
-   *
-   * Examples:
-   *
-   * cmd('npm').exec({version: true});
-   *
-   * cmd('java').exec('-version');
-   *
-   * @param options the command options
-   */
-  public async exec(...options: Options[]): Promise<any> {
-    const argsObj: ArgsObject = transformOptions(options, this.transform);
-    const quiet = asBoolean(argsObj.quiet, this._options.quiet);
-    const printCommand = asBoolean(argsObj.printCommand, this._options.printCommand);
-    const cwd = argsObj.cwd ? argsObj.cwd : this._options.cwd;
-    const execCommand = `${this._name} ${argsObj.args.join(' ')}`;
-    if (!quiet && printCommand) {
-      console.log(`$ ${execCommand}`);
+    constructor(name: string, options: CommandOptions = {}) {
+        this._name = name;
+        this._options = {
+            cwd: process.cwd(),
+            printCommand: true,
+            quiet: false,
+            ...definiteValuesOf(options)
+        };
     }
-    return spawnProcess(this._name, argsObj.args, quiet, cwd);
-  }
+
+    /**
+     * Build the command as a string without executing it.
+     *
+     * Examples:
+     *
+     * cmd('npm').build({version: true});
+     *
+     * cmd('java').build('-version');
+     *
+     * @param options the command options
+     */
+    public build(...options: Options[]): string {
+        const argsObj: ArgsObject = transformOptions(options, this.transform);
+        return `${this._name} ${argsObj.args.join(' ')}`;
+    }
+
+    /**
+     * Build command args as a string array without executing it.
+     *
+     * Examples:
+     *
+     * cmd('npm').buildArgs({version: true});
+     *
+     * cmd('java').buildArgs('-version');
+     *
+     * @param options the command options
+     */
+    public buildArgs(...options: Options[]): string[] {
+        return transformOptions(options, this.transform).args;
+    }
+
+    /**
+     * Execute the command.
+     *
+     * Examples:
+     *
+     * cmd('npm').exec({version: true});
+     *
+     * cmd('java').exec('-version');
+     *
+     * @param options the command options
+     */
+    public async exec(...options: Options[]): Promise<any> {
+        const argsObj: ArgsObject = transformOptions(options, this.transform);
+        const quiet = asBoolean(argsObj.quiet, this._options.quiet);
+        const printCommand = asBoolean(argsObj.printCommand, this._options.printCommand);
+        const cwd = argsObj.cwd ? argsObj.cwd : this._options.cwd;
+        const execCommand = `${this._name} ${argsObj.args.join(' ')}`;
+        if (!quiet && printCommand) {
+            console.log(`$ ${execCommand}`);
+        }
+        return spawnProcess(this._name, argsObj.args, quiet, cwd);
+    }
 }
 
 const isBoolean = (it: any) => [true, false].includes(it);
 
 function isPlainObject(o: any): boolean {
-  return typeof o === 'object' && o.constructor === Object;
+    return typeof o === 'object' && o.constructor === Object;
 }
 
 async function spawnProcess(bin: string, args: string[], quiet: boolean, cwd: string): Promise<any> {
-  return new Promise((resolve, reject) => {
-    const spawnOptions: SpawnOptions = {
-      cwd
-    };
-    if (!quiet) {
-      spawnOptions.stdio = 'inherit';
-    }
-    const spawned = spawn(bin, args, spawnOptions);
-    spawned.on('exit', (exitCode) => {
-      exitCode === 0 ? resolve(null) : reject(new Error(`Exit with code: ${exitCode}`));
-    });
-    spawned.on('error', (err: any) => {
-      try {
-        statSync(cwd);
-      } catch (e: any) {
-        if (e.code === 'ENOENT') {
-          reject(`The specified cwd does not exist: ${cwd}`);
+    return new Promise((resolve, reject) => {
+        const spawnOptions: SpawnOptions = {
+            cwd
+        };
+        if (!quiet) {
+            spawnOptions.stdio = 'inherit';
         }
-      }
-      reject(err);
+        const spawned = spawn(bin, args, spawnOptions);
+        spawned.on('exit', (exitCode) => {
+            exitCode === 0 ? resolve(null) : reject(new Error(`Exit with code: ${exitCode}`));
+        });
+        spawned.on('error', (err: any) => {
+            try {
+                statSync(cwd);
+            } catch (e: any) {
+                if (e.code === 'ENOENT') {
+                    reject(`The specified cwd does not exist: ${cwd}`);
+                }
+            }
+            reject(err);
+        });
     });
-  });
 }
 
 function transformOptions(options: Options[], transform: TransformOption): ArgsObject {
-  const argsObj: ArgsObject = {
-    args: [],
-  };
-  options.forEach((opt: Options, idx: number) => {
-    if (Array.isArray(opt)) {
-      opt.forEach((it: Option) => {
-        if (isPlainObject(it)) {
-          argsObj.args.push(...defaultTransform(it as ObjectOption));
-        } else if (typeof it === 'string') {
-          argsObj.args.push(it);
+    const argsObj: ArgsObject = {
+        args: []
+    };
+    options.forEach((opt: Options, idx: number) => {
+        if (Array.isArray(opt)) {
+            opt.forEach((it: Option) => {
+                if (isPlainObject(it)) {
+                    argsObj.args.push(...defaultTransform(it as ObjectOption));
+                } else if (typeof it === 'string') {
+                    argsObj.args.push(it);
+                }
+            });
+        } else if (isPlainObject(opt)) {
+            if (idx === 0) {
+                const transformed: ArgsObject = transformFirstOption(opt as ObjectOption, transform);
+                argsObj.args.push(...transformed.args);
+                argsObj.cwd = transformed.cwd;
+                argsObj.printCommand = transformed.printCommand;
+                argsObj.quiet = transformed.quiet;
+            } else {
+                argsObj.args.push(...defaultTransform(opt as ObjectOption));
+            }
+        } else if (typeof opt === 'string') {
+            argsObj.args.push(opt);
         }
-      });
-    } else if (isPlainObject(opt)) {
-      if (idx === 0) {
-        const transformed: ArgsObject = transformFirstOption(opt as ObjectOption, transform);
-        argsObj.args.push(...transformed.args);
-        argsObj.cwd = transformed.cwd;
-        argsObj.printCommand = transformed.printCommand;
-        argsObj.quiet = transformed.quiet;
-      } else {
-        argsObj.args.push(...defaultTransform(opt as ObjectOption));
-      }
-    } else if (typeof opt === 'string') {
-      argsObj.args.push(opt);
-    }
-  });
-  return argsObj;
+    });
+    return argsObj;
 }
 
 function transformFirstOption(opt: ObjectOption, transform: TransformOption): ArgsObject {
-  const argsObj: ArgsObject = {
-    args: [],
-  };
-  const filteredOption: Option = {};
-  Object.entries(opt).forEach(([flagName, flagValue]) => {
-    if (flagName === 'quiet') {
-      argsObj.quiet = flagValue === true;
-    } else if (flagName === 'printCommand') {
-      argsObj.printCommand = flagValue === true;
-    } else if (flagName === 'cwd') {
-      argsObj.cwd = flagValue!.toString();
-    } else {
-      filteredOption[flagName] = flagValue;
-    }
-  });
-  argsObj.args.push(...transform(filteredOption));
-  return argsObj;
+    const argsObj: ArgsObject = {
+        args: []
+    };
+    const filteredOption: Option = {};
+    Object.entries(opt).forEach(([flagName, flagValue]) => {
+        if (flagName === 'quiet') {
+            argsObj.quiet = flagValue === true;
+        } else if (flagName === 'printCommand') {
+            argsObj.printCommand = flagValue === true;
+        } else if (flagName === 'cwd') {
+            argsObj.cwd = flagValue!.toString();
+        } else {
+            filteredOption[flagName] = flagValue;
+        }
+    });
+    argsObj.args.push(...transform(filteredOption));
+    return argsObj;
 }
 
 function defaultTransform(opt: ObjectOption): string[] {
-  const args: string[] = [];
-  Object.entries(opt).forEach(([flagName, flagValue]) => {
-    if (isBoolean(flagValue)) {
-      if (flagValue === true) {
-        if (flagName.length === 1) {
-          args.push(`-${flagName}`);
-        } else {
-          args.push(`--${flagName}`);
+    const args: string[] = [];
+    Object.entries(opt).forEach(([flagName, flagValue]) => {
+        if (isBoolean(flagValue)) {
+            if (flagValue === true) {
+                if (flagName.length === 1) {
+                    args.push(`-${flagName}`);
+                } else {
+                    args.push(`--${flagName}`);
+                }
+            }
+        } else if (flagValue) {
+            if (flagName.length === 1) {
+                args.push(`-${flagName}`, `${flagValue}`);
+            } else {
+                args.push(`--${flagName}`, `${flagValue}`);
+            }
         }
-      }
-    } else if (flagValue) {
-      if (flagName.length === 1) {
-        args.push(`-${flagName}`, `${flagValue}`);
-      } else {
-        args.push(`--${flagName}`, `${flagValue}`);
-      }
-    }
-  });
-  return args;
+    });
+    return args;
 }
