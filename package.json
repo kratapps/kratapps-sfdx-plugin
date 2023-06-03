@@ -5,6 +5,7 @@
   "author": "Kratapps",
   "bugs": "https://github.com/kratapps/kratapps-sfdx-plugin/issues",
   "dependencies": {
+    "@kratapps/prettier-config": "^0.1.0",
     "@oclif/core": "^2.8.2",
     "@salesforce/command": "5.3.8",
     "@salesforce/core": "^3.36.1",
