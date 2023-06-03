@@ -102,7 +102,7 @@ export default class RemoteDeployStart extends SfCommand<DeployResultJson> {
         process.chdir(projectDir);
         outputFileSync(`${projectDir}/sfdx-project.json`, JSON.stringify(this.createSfdxProjectJsonData()));
         const sfProject = await SfProject.resolve(projectDir);
-        this.spinner.start(`Downloading source from GitHub repo ${repoOwner}/${repoName}${repoRef ? `:${repoRef}` : ''}`);
+        this.log(`Downloading source from GitHub repo ${repoOwner}/${repoName}${repoRef ? `:${repoRef}` : ''}`);
         if (sourceDirs && sourceDirs.length) {
             for (let sourceDir of sourceDirs) {
                 await this.saveFileFromGithubRecursive(
@@ -132,16 +132,14 @@ export default class RemoteDeployStart extends SfCommand<DeployResultJson> {
         } else {
             throw new SfError('Nothing specified to deploy.');
         }
-        this.spinner.stop();
         await this.deploy({
             sfProject,
             targetOrg,
             sourceDirs,
             metadata
         });
-        this.spinner.start('Cleanup');
+        this.log('Cleanup');
         rimraf.sync(projectDir);
-        this.spinner.stop();
         return {};
     }
 

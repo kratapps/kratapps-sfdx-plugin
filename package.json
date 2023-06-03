@@ -1,7 +1,7 @@
 {
   "name": "@kratapps/sfdx-plugin",
   "description": "Kratapps SFDX plugin",
-  "version": "0.3.1",
+  "version": "0.3.2",
   "author": "Kratapps",
   "bugs": "https://github.com/kratapps/kratapps-sfdx-plugin/issues",
   "dependencies": {
@@ -119,7 +119,7 @@
     "postpack": "rm -f oclif.manifest.json",
     "prepack": "sf-prepack",
     "version": "oclif readme",
-    "publish": "npm publish @kratapps/sfdx-plugin"
+    "publish": "npm publish --access public"
   },
   "wireit": {
     "build": {
