@@ -118,8 +118,7 @@
     "format": "wireit",
     "postpack": "rm -f oclif.manifest.json",
     "prepack": "sf-prepack",
-    "version": "oclif readme",
-    "publish": "npm publish --access public"
+    "version": "oclif readme"
   },
   "wireit": {
     "build": {
