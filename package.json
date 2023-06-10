@@ -37,6 +37,7 @@
     "@salesforce/source-testkit": "^2.0.59",
     "@salesforce/ts-sinon": "1.4.6",
     "@salesforce/ts-types": "^1.5.20",
+    "@trivago/prettier-plugin-sort-imports": "^4.1.1",
     "@types/fs-extra": "^9.0.11",
     "@types/jsforce": "^1.9.30",
     "@types/node-fetch": "^2.5.10",
@@ -117,6 +118,7 @@
     "compile": "wireit",
     "docs": "sf-docs",
     "format": "wireit",
+    "lint": "wireit",
     "postpack": "rm -f oclif.manifest.json",
     "prepack": "sf-prepack",
     "version": "oclif readme"
@@ -124,7 +126,8 @@
   "wireit": {
     "build": {
       "dependencies": [
-        "compile"
+        "compile",
+        "lint"
       ]
     },
     "compile": {
@@ -148,6 +151,17 @@
         "schemas/**/*.json",
         "command-snapshot.json",
         ".prettier*"
+      ],
+      "output": []
+    },
+    "lint": {
+      "command": "eslint src --color --cache --cache-location .eslintcache",
+      "files": [
+        "src/**/*.ts",
+        "test/**/*.ts",
+        "messages/**",
+        "**/.eslint*",
+        "**/tsconfig.json"
       ],
       "output": []
     }

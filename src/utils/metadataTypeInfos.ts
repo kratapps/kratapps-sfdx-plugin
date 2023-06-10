@@ -1,7 +1,15 @@
-import infos from '../metadata/metadataTypeInfos';
+import { Dictionary } from '@salesforce/ts-types';
 import { Optional } from '@salesforce/ts-types/lib/types/union';
 
-const typeDefs: any = infos.typeDefs;
+import infos from '../metadata/metadataTypeInfos';
+
+type TypeDef = {
+    metadataName: string; // ApexClass
+    defaultDirectory: string; // classes
+    parent?: TypeDef;
+};
+
+const typeDefs: Dictionary<TypeDef> = infos.typeDefs;
 
 export type MetadataTypeInfo = {
     metadataName: string; // ApexClass

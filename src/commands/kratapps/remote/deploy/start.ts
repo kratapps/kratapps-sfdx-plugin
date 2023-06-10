@@ -1,21 +1,32 @@
-import { Messages, Org, SfError } from '@salesforce/core';
-import { Flags, SfCommand } from '@salesforce/sf-plugins-core';
-import { acceptHeader, getRepositoryContent, GithubContent, isGithubContent, StructuredFileLocation } from '../../../../lib/github';
-import { ensureString, isArray, Optional } from '@salesforce/ts-types';
-import { join } from 'path';
 import { outputFileSync } from 'fs-extra';
+import { join } from 'path';
+import { dirSync } from 'tmp';
+
+import { Messages, Org, SfError } from '@salesforce/core';
+import { ProjectJson, SfProject } from '@salesforce/core/lib/sfProject';
 import { executeDeploy, resolveApi } from '@salesforce/plugin-deploy-retrieve/lib/utils/deploy';
 import { getVersionMessage } from '@salesforce/plugin-deploy-retrieve/lib/utils/output';
 import { DeployProgress } from '@salesforce/plugin-deploy-retrieve/lib/utils/progressBar';
-import { SfProject } from '@salesforce/core/lib/sfProject';
-import { dirSync } from 'tmp';
+import { Flags, SfCommand } from '@salesforce/sf-plugins-core';
+import { Optional, hasString, isArray } from '@salesforce/ts-types';
+
+import { FlagInput, FlagOutput } from '@oclif/core/lib/interfaces/parser';
+
+import {
+    RepositoryContent,
+    StructuredFileLocation,
+    acceptHeader,
+    getRepositoryContent,
+    isRepositoryContent
+} from '../../../../utils/github';
+import { MetadataTypeInfo, getTypeInfo } from '../../../../utils/metadataTypeInfos';
+
 import rimraf = require('rimraf');
-import { getTypeInfo, MetadataTypeInfo } from '../../../../lib/metadataTypeInfos';
 
 Messages.importMessagesDirectory(__dirname);
 const messages = Messages.loadMessages('@kratapps/sfdx-plugin', 'remoteDeployStart');
 
-type DeployResultJson = {};
+type DeployResultJson = object;
 
 const exclusiveFlags = ['source-dir', 'metadata'];
 
@@ -30,7 +41,7 @@ function describeRequestedMetadata(metadataArg: string): RequestedMetadata {
     }
     const [metadataName, componentName] = metadataArg.split(':');
     const info = getTypeInfo(metadataName);
-    if (!info || !info.metadataName) {
+    if (!info?.metadataName) {
         throw new SfError(`Invalid metadata: ${metadataArg}`);
     } else if (!componentName.length) {
         throw new SfError(`Invalid metadata: ${metadataArg}`);
@@ -47,7 +58,7 @@ export default class RemoteDeployStart extends SfCommand<DeployResultJson> {
     public static readonly examples = messages.getMessages('examples');
     public static readonly requiresProject = false;
 
-    public static readonly flags: any = {
+    public static readonly flags: FlagInput = {
         'target-org': Flags.requiredOrg({
             char: 'o',
             summary: messages.getMessage('targetOrgFlagSummary'),
@@ -90,33 +101,35 @@ export default class RemoteDeployStart extends SfCommand<DeployResultJson> {
     };
 
     public async run(): Promise<DeployResultJson> {
-        const { flags } = await this.parse(RemoteDeployStart);
-        const targetOrg = flags['target-org'];
-        const repoOwner = ensureString(flags['repo-owner']);
-        const repoName = ensureString(flags['repo-name']);
-        const repoRef = flags['repo-ref'];
-        const sourceDirs: string[] = flags['source-dir'];
-        const metadata: string[] = flags['metadata'];
-        const token: Optional<string> = flags.token;
+        const { flags }: { flags: FlagOutput } = await this.parse(RemoteDeployStart);
+        const targetOrg = flags['target-org'] as Org;
+        const repoOwner = flags['repo-owner'] as string;
+        const repoName = flags['repo-name'] as string;
+        const repoRef = flags['repo-ref'] as Optional<string>;
+        const sourceDirs = flags['source-dir'] as string[];
+        const metadata = flags['metadata'] as string[];
+        const token = flags.token as Optional<string>;
         const { name: projectDir } = dirSync();
         process.chdir(projectDir);
-        outputFileSync(`${projectDir}/sfdx-project.json`, JSON.stringify(this.createSfdxProjectJsonData()));
+        outputFileSync(`${projectDir}/sfdx-project.json`, JSON.stringify(createSfdxProjectJsonData()));
         const sfProject = await SfProject.resolve(projectDir);
         this.log(`Downloading source from GitHub repo ${repoOwner}/${repoName}${repoRef ? `:${repoRef}` : ''}`);
-        if (sourceDirs && sourceDirs.length) {
-            for (let sourceDir of sourceDirs) {
-                await this.saveFileFromGithubRecursive(
-                    projectDir,
-                    {
-                        owner: repoOwner,
-                        repo: repoName,
-                        path: sourceDir,
-                        ref: repoRef
-                    },
-                    token
-                );
-            }
-        } else if (metadata && metadata.length) {
+        if (sourceDirs?.length) {
+            await Promise.all(
+                sourceDirs.map((sourceDir) =>
+                    this.saveFileFromGithubRecursive(
+                        projectDir,
+                        {
+                            owner: repoOwner,
+                            repo: repoName,
+                            path: sourceDir,
+                            ref: repoRef
+                        },
+                        token
+                    )
+                )
+            );
+        } else if (metadata?.length) {
             const requestedMetadata: RequestedMetadata[] = metadata.map(describeRequestedMetadata);
             await this.saveMetadataFromGithubRecursive(
                 projectDir,
@@ -153,13 +166,12 @@ export default class RemoteDeployStart extends SfCommand<DeployResultJson> {
         targetOrg: Org;
         sourceDirs: string[];
         metadata: string[];
-    }) {
-        const { flags } = await this.parse(RemoteDeployStart);
+    }): Promise<void> {
         const api = await resolveApi(this.configAggregator);
         const { deploy, componentSet } = await executeDeploy(
             {
                 'source-dir': sourceDirs ? sourceDirs.map((it) => `src/${it}`) : undefined,
-                metadata: metadata,
+                metadata,
                 'target-org': targetOrg.getUsername(),
                 'ignore-conflicts': true,
                 api
@@ -174,9 +186,9 @@ export default class RemoteDeployStart extends SfCommand<DeployResultJson> {
         this.log(`Deploy ID: ${deploy.id}`);
         new DeployProgress(deploy, this.jsonEnabled()).start();
         try {
-            await deploy.pollStatus({ timeout: flags.wait });
-        } catch (e: any) {
-            if (!e?.stack?.includes('SourceTracking.updateLocalTracking')) {
+            await deploy.pollStatus();
+        } catch (e: unknown) {
+            if (!hasString(e, 'stack') || !e.stack.includes('SourceTracking.updateLocalTracking')) {
                 throw e;
             }
         }
@@ -194,9 +206,9 @@ export default class RemoteDeployStart extends SfCommand<DeployResultJson> {
             accept: acceptHeader.json,
             token
         });
-        if (isGithubContent(content)) {
+        if (isRepositoryContent(content)) {
             promises.push(this.visitMetadataFromGithubToSave(srcDir, metadata, content, token));
-        } else if (isArray<GithubContent>(content)) {
+        } else if (isArray<RepositoryContent>(content)) {
             for (const item of content) {
                 promises.push(this.visitMetadataFromGithubToSave(srcDir, metadata, item, token));
             }
@@ -215,9 +227,9 @@ export default class RemoteDeployStart extends SfCommand<DeployResultJson> {
             accept: acceptHeader.json,
             token
         });
-        if (isGithubContent(content)) {
+        if (isRepositoryContent(content)) {
             promises.push(this.visitFileFromGithubToSave(projectDir, content, token));
-        } else if (isArray<GithubContent>(content)) {
+        } else if (isArray<RepositoryContent>(content)) {
             for (const item of content) {
                 promises.push(this.visitFileFromGithubToSave(projectDir, item, token));
             }
@@ -228,14 +240,14 @@ export default class RemoteDeployStart extends SfCommand<DeployResultJson> {
     private async visitMetadataFromGithubToSave(
         projectDir: string,
         metadata: RequestedMetadata[],
-        content: GithubContent,
+        content: RepositoryContent,
         token: Optional<string>
-    ) {
+    ): Promise<void> {
         const { type, path, name, url, download_url: downloadUrl } = content;
         if (type === 'file' && downloadUrl) {
             if (name.includes('.')) {
                 const fileNameWithoutExt = name.split('.')[0];
-                if (fileNameWithoutExt && fileNameWithoutExt.length) {
+                if (fileNameWithoutExt?.length) {
                     const pathParts = path.split('/');
                     const mdt = metadata.find(
                         (it) =>
@@ -245,7 +257,7 @@ export default class RemoteDeployStart extends SfCommand<DeployResultJson> {
                     );
                     if (mdt) {
                         this.info(name);
-                        return this.saveFileFromGithub(join(projectDir, 'src', path), downloadUrl, token);
+                        return saveFileFromGithub(join(projectDir, 'src', path), downloadUrl, token);
                     }
                 }
             }
@@ -255,36 +267,36 @@ export default class RemoteDeployStart extends SfCommand<DeployResultJson> {
         }
     }
 
-    private async visitFileFromGithubToSave(projectDir: string, content: GithubContent, token: Optional<string>) {
+    private async visitFileFromGithubToSave(projectDir: string, content: RepositoryContent, token: Optional<string>): Promise<void> {
         const { type, path, name, url, download_url: downloadUrl } = content;
         if (type === 'file' && downloadUrl) {
             this.info(name);
-            return this.saveFileFromGithub(join(projectDir, 'src', path), downloadUrl, token);
+            return saveFileFromGithub(join(projectDir, 'src', path), downloadUrl, token);
         } else if (type === 'dir') {
             return this.saveFileFromGithubRecursive(projectDir, url, token);
         }
     }
+}
 
-    private async saveFileFromGithub(path: string, target: string, token: Optional<string>) {
-        const data = await getRepositoryContent({
-            target,
-            accept: acceptHeader.raw,
-            token
-        });
-        return outputFileSync(path, data);
-    }
+async function saveFileFromGithub(path: string, target: string, token: Optional<string>): Promise<void> {
+    const data = await getRepositoryContent({
+        target,
+        accept: acceptHeader.raw,
+        token
+    });
+    outputFileSync(path, data);
+}
 
-    private createSfdxProjectJsonData() {
-        return {
-            packageDirectories: [
-                {
-                    path: 'src/',
-                    default: true
-                }
-            ],
-            namespace: '',
-            sfdcLoginUrl: 'https://login.salesforce.com',
-            sourceApiVersion: '57.0'
-        };
-    }
+function createSfdxProjectJsonData(): ProjectJson {
+    return {
+        packageDirectories: [
+            {
+                path: 'src/',
+                default: true
+            }
+        ],
+        namespace: '',
+        sfdcLoginUrl: 'https://login.salesforce.com',
+        sourceApiVersion: '57.0'
+    };
 }

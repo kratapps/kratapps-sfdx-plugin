@@ -1,6 +1,7 @@
 import fetch from 'node-fetch';
+
+import { Optional, ensure, isString } from '@salesforce/ts-types';
 import { Many } from '@salesforce/ts-types/lib/types/union';
-import { isString, Optional } from '@salesforce/ts-types';
 
 export const acceptHeader: { [key: string]: Accept } = {
     raw: 'application/vnd.github.v3.raw+json',
@@ -22,7 +23,7 @@ export type GetRepositoryContentOptions = {
     token?: string;
 };
 
-export type GithubContent = {
+export type RepositoryContent = {
     name: string;
     path: string;
     download_url: string | null;
@@ -30,13 +31,21 @@ export type GithubContent = {
     type: 'file' | 'dir';
 };
 
-export function isGithubContent(it: unknown): it is GithubContent {
-    return (it as GithubContent).name !== undefined;
+export function ensureRepositoryContent(value: unknown): RepositoryContent {
+    return ensure(asRepositoryContent(value), 'Value is not a RepositoryContent');
 }
 
-export async function getRepositoryContent(opts: GetRepositoryContentOptions): Promise<Many<GithubContent> | string> {
+export function asRepositoryContent(value: unknown, defaultValue?: RepositoryContent): Optional<RepositoryContent> {
+    return isRepositoryContent(value) ? value : defaultValue;
+}
+
+export function isRepositoryContent(it: unknown): it is RepositoryContent {
+    return (it as RepositoryContent).name !== undefined;
+}
+
+export async function getRepositoryContent(opts: GetRepositoryContentOptions): Promise<Many<RepositoryContent> | string> {
     const { target, accept, token } = opts;
-    const refQuery = (ref: Optional<string>) => (ref ? `ref=${ref}` : '');
+    const refQuery = (ref: Optional<string>): string => (ref ? `ref=${ref}` : '');
     const url = isString(target)
         ? target
         : `https://api.github.com/repos/${target.owner}/${target.repo}/contents/${target.path}?${refQuery(target.ref)}`;
@@ -51,5 +60,5 @@ export async function getRepositoryContent(opts: GetRepositoryContentOptions): P
     } else if (resp.status !== 200) {
         throw new Error(await resp.text());
     }
-    return accept === acceptHeader.raw ? resp.text() : resp.json();
+    return accept === acceptHeader.raw ? resp.text() : ensureRepositoryContent(resp.json());
 }
