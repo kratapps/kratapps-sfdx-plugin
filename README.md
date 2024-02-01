@@ -1,5 +1,9 @@
 # Kratapps SFDX plugin
 
+DEPRECATED.
+
+Use [kratapps/sf-plugin](https://github.com/kratapps/sf-plugin/) instead.
+
 <!-- toc -->
 
 - [Kratapps SFDX plugin](#kratapps-sfdx-plugin)
